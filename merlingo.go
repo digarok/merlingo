@@ -1,6 +1,10 @@
 package merlingo
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
 
 // Hello returns a greeting for the named person.
 func Hello(name string) string {
@@ -10,4 +14,21 @@ func Hello(name string) string {
 
 func Fmt(code string) string {
 	return code
+}
+
+func FmtFile(filename string) {
+	fmt.Println("Formatting ", filename)
+	readFile, err := os.Open(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+
+	for fileScanner.Scan() {
+		fmt.Println(fileScanner.Text())
+	}
+
+	readFile.Close()
+
 }
