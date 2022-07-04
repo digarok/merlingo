@@ -177,7 +177,6 @@ func fmtLine(code string) (string, error) {
 				}
 			}
 		}
-
 	}
 
 	// check for lossiness
@@ -187,8 +186,9 @@ func fmtLine(code string) (string, error) {
 		return buf, errors.New("error on line")
 	}
 
-	// this adds a newline, not sure about cross-platformness
-	return buf + "\n", nil
+	// this strips excess whitespace (@todo: locic issue?)
+	//   .. adds a newline, not sure about cross-platformness
+	return strings.TrimRight(buf, " ") + "\n", nil
 }
 
 func FmtFile(filename string) {
