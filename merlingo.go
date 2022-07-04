@@ -37,6 +37,9 @@ func fmtLine(code string) (string, error) {
 
 	// scan by char
 	for i, c := range code {
+		// first de-tabify as we're in spaces land now!
+		code = strings.ReplaceAll(code, "\t", " ")
+
 		// starts with whitespace? do an indent
 		if i == 0 && unicode.IsSpace(c) {
 			buf += strings.Repeat(" ", mnemonic_col_x)
@@ -180,8 +183,8 @@ func fmtLine(code string) (string, error) {
 	}
 
 	// check for lossiness
-	c1 := strings.Replace(string(code), " ", "", -1)
-	c2 := strings.Replace(buf, " ", "", -1)
+	c1 := strings.ReplaceAll(string(code), " ", "")
+	c2 := strings.ReplaceAll(buf, " ", "")
 	if c1 != c2 {
 		return buf, errors.New("error on line")
 	}
@@ -200,12 +203,12 @@ func FmtFile(filename string) {
 	fileScanner.Split(bufio.ScanLines)
 
 	buf := ""
-	i := 0
+	i := 1 // line counter starts at 1
 	for fileScanner.Scan() {
 		original_line := fileScanner.Text()
 		formatted_line, err := fmtLine(original_line)
 		if err != nil {
-			log.Fatal(err, i)
+			log.Fatal(err, i+1) // error + line
 		}
 		buf += formatted_line
 		i += 1
