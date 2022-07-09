@@ -10,8 +10,8 @@ import (
 )
 
 //  params/defaults
-var mnemonic_col_x = 18
-var operand_col_x = 24
+var mnemonic_col_x = 20
+var operand_col_x = 26
 var comment_col_x = 48
 var min_space = 1
 var bump_space = 2
@@ -35,11 +35,11 @@ func fmtLine(code string) (string, error) {
 	buf := "" // line buffer, starts empty each line and is appended to output_buf
 	label_done = true
 
+	// first de-tabify as we're in spaces land now!
+	code = strings.ReplaceAll(code, "\t", " ")
+
 	// scan by char
 	for i, c := range code {
-		// first de-tabify as we're in spaces land now!
-		code = strings.ReplaceAll(code, "\t", " ")
-
 		// starts with whitespace? do an indent
 		if i == 0 && unicode.IsSpace(c) {
 			buf += strings.Repeat(" ", mnemonic_col_x)
