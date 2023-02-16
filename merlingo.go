@@ -3,20 +3,28 @@ package merlingo
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 )
 
 //  params/defaults
-var mnemonic_col_x = 20
-var operand_col_x = 26
-var comment_col_x = 48
-var min_space = 1
-var bump_space = 2
-var indent_semi = true
-var indent_ast = false
+var mnemonic_col_x = 20 // mc
+var operand_col_x = 26  // oc
+var comment_col_x = 48  // cc
+var min_space = 1       // ms
+var bump_space = 2      // bs
+var indent_semi = true  // is
+var indent_ast = false  // ia
+
+func Status() {
+	fmt.Printf("mc:%v oc:%v cc:%v ms:%v bs:%v\n", mnemonic_col_x, operand_col_x, comment_col_x, min_space, bump_space)
+}
 
 func fmtLine(code string) (string, error) {
 
@@ -194,6 +202,45 @@ func fmtLine(code string) (string, error) {
 	return strings.TrimRight(buf, " ") + "\n", nil
 }
 
+// Check for a Modeline and update the indentation
+// rules if we find one.  Return true if found.
+//
+// Expects caller to know to handle the updated
+// configuration on "true" result (rescan file?)
+//
+// @todo:  error handling... logging?
+func checkModeline(code string) bool {
+	result := false
+	const ModelineRE = `.*[*;].*[eE][dD]:.*`
+	// see if it's a modeline
+	if m, _ := regexp.MatchString(ModelineRE, code); m == true {
+		result = true
+		ParseModeline(code)
+	}
+	return result
+}
+
+func ParseModeline(modeline string) {
+	// look for all the modes we know about
+	r := regexp.MustCompile(`(mc|oc|cc|ms|bs)[=:]([^\s]+)`)
+	matches := r.FindAllStringSubmatch(modeline, -1)
+	for _, v := range matches {
+		word := v[1]
+		switch {
+		case word == "mc":
+			mnemonic_col_x, _ = strconv.Atoi(v[2])
+		case word == "oc":
+			operand_col_x, _ = strconv.Atoi(v[2])
+		case word == "cc":
+			comment_col_x, _ = strconv.Atoi(v[2])
+		case word == "ms":
+			min_space, _ = strconv.Atoi(v[2])
+		case word == "bs":
+			bump_space, _ = strconv.Atoi(v[2])
+		}
+	}
+}
+
 func FmtFile(filename string) {
 	readFile, err := os.Open(filename)
 	if err != nil {
@@ -203,9 +250,26 @@ func FmtFile(filename string) {
 	fileScanner.Split(bufio.ScanLines)
 
 	buf := ""
-	i := 1 // line counter starts at 1
+	i := 1           // line counter starts at 1
+	modeset := false // only allow one update per file
 	for fileScanner.Scan() {
 		original_line := fileScanner.Text()
+		// check for modeline if we havent already found one
+		if !modeset {
+			r := checkModeline(original_line)
+			if r {
+				modeset = true // ONE PER FILE I SEZ!
+				buf = ""
+				readFile.Seek(0, io.SeekStart)
+				fileScanner = bufio.NewScanner(readFile)
+				fileScanner.Split(bufio.ScanLines)
+				i = 1
+				continue
+				// I fuckign doubt it ^^
+				// huge bug alert
+			}
+		}
+		// always every line - indent
 		formatted_line, err := fmtLine(original_line)
 		if err != nil {
 			log.Fatal(err, i+1) // error + line
