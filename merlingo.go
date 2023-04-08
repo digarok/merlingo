@@ -13,10 +13,22 @@ import (
 	"unicode"
 )
 
+// For reference from my Merlin 16+ on top
+// My setting on bottom
+/*
+Main          lda    #$2034     ;wow!!!!
+0123456789012345678901234567890123456789A
+MMM             llll  #$3333      ;new
+
+CadiusExample   ~PtrToHand      #$012000;IntrPicH;#$8000  ;Moved to private handle
+CE2         lda   #$1234      ; dang
+*/
+
+
 //  params/defaults
-var mnemonic_col_x = 20 // mc
-var operand_col_x = 26  // oc
-var comment_col_x = 48  // cc
+var mnemonic_col_x = 16 // mc
+var operand_col_x = 22  // oc
+var comment_col_x = 44  // cc
 var min_space = 1       // ms
 var bump_space = 2      // bs
 var indent_semi = true  // is
